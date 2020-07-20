@@ -13,5 +13,7 @@ The modules not currently implemented include:
   - Shutdown control
   - Flap control
   
-`runFAST.m` can be used to load the ROSCO parameters from a .IN file, using `load_ROSCO_params.m` and a more detailed version can be found in the `matlab-toolbox` [repository](https://github.com/dzalkind/matlab-toolbox/tree/master/Simulations).
+The `matlab-toolbox` is required for reading OpenFAST inputs, loading ROSCO parameters, and post processing the output files; it can be found [here](https://github.com/dzalkind/matlab-toolbox/tree/master/).
+
+Follow the direction for installing the toolbox and use `runFAST.m` to run the Simulink model.  A more detailed version of `runFAST.m` can be round in the `matlab-toolbox`.
   
