@@ -23,6 +23,7 @@ turbine_params:
   TSR_operational:    9.0
   twr_freq:  3.355 # for semi only!
   ptfm_freq: 0.213 # for semi only!
+  pitch_act_bw:       1.5708                  # Pitch Actuator bandwidth [rad], {default = 6.2832 rad/s}
 #------------------------------- CONTROLLER PARAMETERS ----------------------------------
 controller_params:
   # Controller flags 
