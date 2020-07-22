@@ -62,6 +62,7 @@ class Controller():
         self.SD_Mode = controller_params['SD_Mode']
         self.Fl_Mode = controller_params['Fl_Mode']
         self.Flp_Mode = controller_params['Flp_Mode']
+        self.APC_Mode = controller_params['APC_Mode']
 
         # Necessary parameters
         self.zeta_pc = controller_params['zeta_pc']
@@ -324,6 +325,9 @@ class Controller():
             self.Ki_flap = np.array([0.0])
             self.Kp_flap = np.array([0.0])
 
+        # Active power control
+        self.APC_R, self.APC_B = self.active_power_control(turbine.Cp)
+
     def tune_flap_controller(self,turbine):
         '''
         Tune controller for distributed aerodynamic control
@@ -399,6 +403,21 @@ class Controller():
 
         self.Kp_flap = (2*self.zeta_flp*self.omega_flp - 2*zetaf*omegaf)/(kappa*omegaf**2)
         self.Ki_flap = (self.omega_flp**2 - omegaf**2)/(kappa*omegaf**2)
+
+    def active_power_control(self, Cp, nR = 12):
+
+        Cp_TSRopt = Cp.interp_surface(Cp.pitch_initial_rad, Cp.TSR_opt)
+        Cp_opt      = max(Cp_TSRopt)
+
+        Cp_inv      = interpolate.interp1d(Cp_TSRopt,Cp.pitch_initial_rad)
+        
+        # want to dedicate more to values close to 1 because that's where the controller will operate mostly
+        # l parameter scales this
+        l           = 2.5
+        R           = 1/l * np.log10(np.linspace(0,10**l - 1,num=nR,endpoint=True)+1)
+        beta_PC     = Cp_inv(R*Cp_opt)
+
+        return R, beta_PC
         
 class ControllerBlocks():
     '''
