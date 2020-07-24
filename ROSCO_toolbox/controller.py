@@ -434,6 +434,10 @@ class Controller():
         R           = 1/l * np.log10(np.linspace(0,10**l - 1,num=nR,endpoint=True)+1)
         beta_PC     = Cp_inv(R*Cp_opt)
 
+        # append R > 1
+        beta_PC     = np.append(beta_PC,beta_PC[-1])
+        R           = np.append(R,2.0)
+
         return R, beta_PC
         
 class ControllerBlocks():
