@@ -28,10 +28,6 @@ path_params         = inps['path_params']
 turbine_params      = inps['turbine_params']
 controller_params   = inps['controller_params']
 
-# Ensure minimum generator speed at 50 rpm (for example's sake), turn on peak shaving and cp-maximizing min pitch
-controller_params['vs_minspd'] = 50
-controller_params['PS_Mode'] = 3
-
 # Instantiate turbine, controller, and file processing classes
 turbine         = ROSCO_turbine.Turbine(turbine_params)
 controller      = ROSCO_controller.Controller(controller_params)
@@ -44,11 +40,12 @@ turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory
 controller.tune_controller(turbine)
 
 # Plot minimum pitch schedule
-if False:
+if True:
     plt.plot(controller.APC_R, controller.APC_B,label='Active Power Control LUT')
     plt.legend()
     plt.xlabel('Power Rating (-)')
     plt.ylabel('Blade pitch (rad)')
+    plt.xlim((0,1.25))
     plt.show()
 
 
