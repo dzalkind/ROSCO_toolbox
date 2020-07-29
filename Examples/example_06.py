@@ -18,8 +18,10 @@ from ROSCO_toolbox import turbine as ROSCO_turbine
 from ROSCO_toolbox import sim as ROSCO_sim
 from ROSCO_toolbox import utilities as ROSCO_utilities
 
+fast_plots = ROSCO_utilities.FAST_Plots()
+
 # Load yaml file 
-parameter_filename = '/Users/dzalkind/Tools/ROSCO_toolbox/Tune_Cases/IEA15MW.yaml'
+parameter_filename = '/Users/dzalkind/Tools/ROSCO_toolbox/Tune_Cases/SUMR-D.yaml'
 inps = yaml.safe_load(open(parameter_filename))
 path_params         = inps['path_params']
 turbine_params      = inps['turbine_params']
@@ -38,13 +40,19 @@ turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory
 controller.tune_controller(turbine)
 
 # Write parameter input file
-param_file = 'DISCON.IN'   # This must be named DISCON.IN to be seen by the compiled controller binary. 
+param_file = '/Users/dzalkind/Tools/SUMR-D/FAST8_IF/DISCON.IN'   # This must be named DISCON.IN to be seen by the compiled controller binary. 
 file_processing.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
 
 # Run OpenFAST
 # --- May need to change fastcall if you use a non-standard command to call openfast
-fast_io.run_openfast(path_params['FAST_directory'], fastcall='openfast', fastfile=path_params['FAST_InputFile'],chdir=True)
+fast_io.run_openfast(path_params['FAST_directory'], fastcall='/Users/dzalkind/Tools/openfast/install/bin/openfast', fastfile=path_params['FAST_InputFile'],chdir=True)
 
+#  Define Plot cases 
+#  --- Comment,uncomment, create, and change these as desired...
+cases = {}
+cases['Baseline'] = ['Wind1VelX', 'BldPitch1', 'GenTq', 'GenSpeed','GenPwr','RootMyb1','TwrBsMyt','PtfmPitch']
 
+# Plot, woohoo!
+fast_plots.plot_fast_out(cases, alldata,showplot=True)
 
 
