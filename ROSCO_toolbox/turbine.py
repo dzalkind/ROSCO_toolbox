@@ -307,8 +307,11 @@ class Turbine():
         # Get values from cc-blade
         print('Running CCBlade aerodynamic analysis, this may take a minute...')
         # P, T, Q, M, CP, CT, CQ, CM = self.cc_rotor.evaluate(ws_flat, omega_flat, pitch_flat, coefficients=True)
-        _, _, _, _, CP, CT, CQ, _ = self.cc_rotor.evaluate(ws_flat, omega_flat, pitch_flat, coefficients=True)
+        cc_outputs = self.cc_rotor.evaluate(ws_flat, omega_flat, pitch_flat, coefficients=True)
         print('CCBlade aerodynamic analysis run successfully.')
+        CP  = cc_outputs[0]['CP']
+        CT  = cc_outputs[0]['CT']
+        CQ  = cc_outputs[0]['CQ']
 
         # Reshape Cp, Ct and Cq
         Cp = np.transpose(np.reshape(CP, (len(pitch_initial), len(TSR_initial))))
