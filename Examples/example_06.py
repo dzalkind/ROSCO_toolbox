@@ -17,6 +17,7 @@ from ROSCO_toolbox import controller as ROSCO_controller
 from ROSCO_toolbox import turbine as ROSCO_turbine
 from ROSCO_toolbox import sim as ROSCO_sim
 from ROSCO_toolbox import utilities as ROSCO_utilities
+import numpy as np
 
 fast_plots = ROSCO_utilities.FAST_Plots()
 
@@ -39,20 +40,29 @@ turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory
 # Tune controller 
 controller.tune_controller(turbine)
 
+# Hard Code SUMR-D Vars
+controller.min_pitch = np.pi / 180 * -5
+controller.vs_minspd = 27.1207
+controller.vs_refspd = 99.30972
+controller.vs_rgn2K  = 0.0475
+controller.VS_ControlMode = 3
+
+controller.pc_gain_schedule.legacy(controller, 0.1109,-0.1211,-0.0249)
+
 # Write parameter input file
 param_file = '/Users/dzalkind/Tools/SUMR-D/FAST8_IF/DISCON.IN'   # This must be named DISCON.IN to be seen by the compiled controller binary. 
 file_processing.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
 
 # Run OpenFAST
 # --- May need to change fastcall if you use a non-standard command to call openfast
-fast_io.run_openfast(path_params['FAST_directory'], fastcall='/Users/dzalkind/Tools/openfast/install/bin/openfast', fastfile=path_params['FAST_InputFile'],chdir=True)
+# fast_io.run_openfast(path_params['FAST_directory'], fastcall='/Users/dzalkind/Tools/openfast/install/bin/openfast', fastfile=path_params['FAST_InputFile'],chdir=True)
 
 #  Define Plot cases 
 #  --- Comment,uncomment, create, and change these as desired...
-cases = {}
-cases['Baseline'] = ['Wind1VelX', 'BldPitch1', 'GenTq', 'GenSpeed','GenPwr','RootMyb1','TwrBsMyt','PtfmPitch']
+# cases = {}
+# cases['Baseline'] = ['Wind1VelX', 'BldPitch1', 'GenTq', 'GenSpeed','GenPwr','RootMyb1','TwrBsMyt','PtfmPitch']
 
-# Plot, woohoo!
-fast_plots.plot_fast_out(cases, alldata,showplot=True)
+# # Plot, woohoo!
+# fast_plots.plot_fast_out(cases, alldata,showplot=True)
 
 

@@ -497,7 +497,7 @@ class ControllerBlocks():
                 return
 
 
-class ControllerTypes():
+class ControllerTypes(Controller):
     '''
     Class ControllerTypes used to define any types of controllers that can be tuned. 
         Generally, calculates gains based on some pre-defined tuning parameters. 
@@ -538,4 +538,17 @@ class ControllerTypes():
 
         # Calculate gain schedule
         self.Kp = 1/B * (2*zeta*om_n + A)
-        self.Ki = om_n**2/B           
+        self.Ki = om_n**2/B     
+
+    def legacy(self, controller, theta_k, kp_0, ki_0):
+        gk  = 1/ (1+ controller.pitch_op_pc / theta_k)
+        self.Kp     = kp_0 * gk
+        self.Ki     = ki_0 * gk
+
+        # append fine pitch
+        self.Kp     = np.insert(self.Kp,0,kp_0)
+        self.Ki     = np.insert(self.Ki,0,kp_0)
+
+        controller.pitch_op_pc = np.insert(controller.pitch_op_pc,0,controller.min_pitch)
+        
+        print('here')

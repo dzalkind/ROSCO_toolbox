@@ -686,7 +686,7 @@ class FileProcessing():
         file.write('{:<014.5f}      ! PC_MinRat			- Minimum pitch rate (in absolute value) in pitch controller, [rad/s].\n'.format(turbine.min_pitch_rate))
         file.write('{:<014.5f}      ! PC_RefSpd			- Desired (reference) HSS speed for pitch controller, [rad/s].\n'.format(turbine.rated_rotor_speed*turbine.Ng))
         file.write('{:<014.5f}      ! PC_FinePit		- Record 5: Below-rated pitch angle set-point, [rad]\n'.format(controller.min_pitch))
-        file.write('{:<014.5f}      ! PC_Switch			- Angle above lowest minimum pitch angle for switch, [rad]\n'.format(1 * deg2rad))
+        file.write('{:<014.5f}      ! PC_Switch			- Angle above lowest minimum pitch angle for switch, [rad]\n'.format(10 * deg2rad))
         file.write('{:<014.5f}      ! PC_ActBw			- Pitch actuator bandwidth [rad/s]\n'.format(turbine.pitch_act_bw))
         file.write('\n')
         file.write('!------- INDIVIDUAL PITCH CONTROL -----------------------------------------\n')
