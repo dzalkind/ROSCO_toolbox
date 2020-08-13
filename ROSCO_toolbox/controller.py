@@ -550,5 +550,4 @@ class ControllerTypes(Controller):
         self.Ki     = np.insert(self.Ki,0,kp_0)
 
         controller.pitch_op_pc = np.insert(controller.pitch_op_pc,0,controller.min_pitch)
-        
-        print('here')
+
