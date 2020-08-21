@@ -62,7 +62,6 @@ class Controller():
         self.SD_Mode = controller_params['SD_Mode']
         self.Fl_Mode = controller_params['Fl_Mode']
         self.Flp_Mode = controller_params['Flp_Mode']
-        self.APC_Mode = controller_params['APC_Mode']
 
         # Necessary parameters
         self.zeta_pc = controller_params['zeta_pc']
@@ -136,6 +135,24 @@ class Controller():
                 self.flp_maxpit = 10.0 * deg2rad
             else:
                 self.flp_maxpit = 0.0
+
+        # power controller params
+        if 'PwC_Mode' in controller_params:
+            self.PwC_Mode = controller_params['PwC_Mode']
+            if 'PwC_const_R' in controller_params:
+                self.PwC_const_R    = controller_params['PwC_const_R']
+            else:
+                self.PwC_const_R    = 1.0
+
+            if 'PwC_ol_R_filename' in controller_params:
+                self.PwC_ol_R_filename = controller_params['PwC_ol_R_filename']
+            else:
+                self.PwC_ol_R_filename = ""
+                
+        else:
+            self.PwC_Mode       = 0
+            self.PwC_const_R        = 1.0
+            self.PwC_ol_R_filename  = ""
 
     def tune_controller(self, turbine):
         """
@@ -332,7 +349,7 @@ class Controller():
             self.Kp_flap = np.array([0.0])
 
         # Active power control
-        self.APC_R, self.APC_B = self.active_power_control(turbine.Cp)
+        self.PwC_R, self.PwC_B = self.power_control(turbine.Cp)
 
     def tune_flap_controller(self,turbine):
         '''
@@ -421,7 +438,7 @@ class Controller():
         self.Kp_flap = (2*self.zeta_flp*self.omega_flp - 2*zetaf*omegaf)/(kappa*omegaf**2)
         self.Ki_flap = (self.omega_flp**2 - omegaf**2)/(kappa*omegaf**2)
 
-    def active_power_control(self, Cp, nR = 12):
+    def power_control(self, Cp, nR = 12):
 
         Cp_TSRopt = Cp.interp_surface(Cp.pitch_initial_rad, Cp.TSR_opt)
         Cp_opt      = max(Cp_TSRopt)
