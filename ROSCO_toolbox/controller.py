@@ -154,6 +154,11 @@ class Controller():
             self.PwC_const_R        = 1.0
             self.PwC_ol_R_filename  = ""
 
+        # soft start (open loop power control)
+        if 'soft_start' in controller_params:
+            self.SoftStart = SoftStart(self,controller_params['soft_start'])
+            self.PwC_ol_R_filename  = self.SoftStart.filename
+
     def tune_controller(self, turbine):
         """
         Given a turbine model, tune a controller based on the NREL generic controller tuning process
@@ -439,6 +444,45 @@ class Controller():
         R           = np.append(R,2.0)
 
         return R, beta_PC
+
+class SoftStart():
+    '''
+        Open loop soft start timeseries
+        attributes:     tt - time indices of timeseries
+                        R_ss - power rating at time indices
+                        filename - open loop filename
+
+        TODO: Eventually, make general open loop power class that this will inherit
+    '''
+
+    def __init__(self,controller,soft_params):
+        
+        # set default parameters
+        if 'R_start' in soft_params:
+            R_start = soft_params['R_start']
+        else:
+            R_start = 0.75  # default
+
+        if 'T_fullP' in soft_params:
+            T_fullP = soft_params['T_fullP']
+        else:
+            T_fullP = 60  # default
+
+        if 'filename' in soft_params:
+            filename = soft_params['filename']
+        else:
+            filename = 'soft_start.dat'  # default
+
+        if hasattr(controller,'PwC_const_R'):
+            full_power = controller.PwC_const_R
+        else:
+            full_power = 1.0
+
+
+        # make timeseries
+        self.tt         = np.linspace(0,T_fullP)
+        self.R_ss       = sigma(self.tt,0,T_fullP,y0=R_start,y1=full_power)
+        self.filename   = filename
         
 class ControllerBlocks():
     '''
@@ -579,3 +623,34 @@ class ControllerTypes():
         # Calculate gain schedule
         self.Kp = 1/B * (2*zeta*om_n + A)
         self.Ki = om_n**2/B           
+
+
+# helper functions
+
+def sigma(tt,t0,t1,y0=0,y1=1):
+    ''' 
+    generates timeseries for a smooth transition from y0 to y1 from x0 to x1
+
+    inputs: tt - time indices
+            t0 - start time
+            t1 - end time
+            y0 - start output
+            y1 - end output
+
+    outputs: yy - output timeseries corresponding to tt
+    '''
+
+    a3 = 2/(t0-t1)**3
+    a2 = -3*(t0+t1)/(t0-t1)**3
+    a1 = 6*t1*t0/(t0-t1)**3
+    a0 = (t0-3*t1)*t0**2/(t0-t1)**3
+
+    a = np.array([a3,a2,a1,a0])  
+
+    T = np.vander(tt,N=4)       # vandermonde matrix
+
+    ss = T @ a.T                # base sigma
+
+    yy = (y1-y0) * ss + y0      # scale and offset
+
+    return yy
