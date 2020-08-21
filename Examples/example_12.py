@@ -40,8 +40,8 @@ turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory
 controller.tune_controller(turbine)
 
 # Plot minimum pitch schedule
-if True:
-    plt.plot(controller.APC_R, controller.APC_B,label='Active Power Control LUT')
+if False:
+    plt.plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
     plt.legend()
     plt.xlabel('Power Rating (-)')
     plt.ylabel('Blade pitch (rad)')
