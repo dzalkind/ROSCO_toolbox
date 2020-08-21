@@ -7,6 +7,7 @@ In this example:
   - Load a turbine from OpenFAST
   - Tune a controller
   - Plot active power control pitch lookup table
+  - Write open-loop input for soft-starting turbine
 
 '''
 # Python Modules
@@ -41,17 +42,26 @@ controller.tune_controller(turbine)
 
 # Plot minimum pitch schedule
 if False:
+    plt.figure(1)
     plt.plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
     plt.legend()
     plt.xlabel('Power Rating (-)')
     plt.ylabel('Blade pitch (rad)')
     plt.xlim((0,1.25))
+
+    plt.figure(2)
+    plt.plot(controller.SoftStart.tt,controller.SoftStart.R_ss)
+    plt.xlabel('Time (sec.)')
+    plt.ylabel('Power Rating (-)')
+
     plt.show()
 
 
 # Write parameter input file
 param_file = '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/DISCON.IN'   
 file_processing.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
+file_processing.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
+# file_processing.write_ol_power(controller)
 
 
 
