@@ -928,6 +928,24 @@ class FileProcessing():
             # self.Cq_table = Cq
             return pitch_initial_rad, TSR_initial, Cp, Ct, Cq
 
+    def write_ol_power(self,controller,*args):
+        # optional arg is ol_filename
+
+        if not args:
+            ol_filename = controller.SoftStart.filename
+        else:
+            ol_filename = args[0]
+
+        with open(ol_filename,'w') as file:
+            print('Writing new open loop power input file: %s.' % ol_filename)
+            file.write('!\tTime\t\tRating\n')
+            file.write('!\t(sec)\t\t(-)\n')
+
+            for time, rating in zip(controller.SoftStart.tt,controller.SoftStart.R_ss):
+                file.write('{:<08.5f}\t\t{:<08.5f}\n'.format(time,rating))
+
+
+
 class DataProcessing():
     """
     Class DataProcessing used to process internal ROSCO toolbox data
