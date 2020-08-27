@@ -662,7 +662,7 @@ class FileProcessing():
         file.write('{0:<12d}        ! SD_Mode           - Shutdown mode {{0: no shutdown procedure, 1: pitch to max pitch at shutdown}}\n'.format(int(controller.SD_Mode)))
         file.write('{0:<12d}        ! Fl_Mode           - Floating specific feedback mode {{0: no nacelle velocity feedback, 1: nacelle velocity feedback}}\n'.format(int(controller.Fl_Mode)))
         file.write('{0:<12d}        ! Flp_Mode          - Flap control mode {{0: no flap control, 1: steady state flap angle, 2: Proportional flap control}}\n'.format(int(controller.Flp_Mode)))
-        file.write('{0:<12d}        ! PwC_Mode          - Power control mode {{0: no power control, 1: constant power, 2: open loop power from PwC_OpenLoop_Inp}}\n'.format(int(controller.PwC_Mode)))
+        file.write('{0:<12d}        ! PwC_Mode          - Power control mode {{0: no power control, 1: constant power, 2: open loop power from PwC_OpenLoop_Inp, 3: open loop power vs. wind speed from PwC_OpenLoop_Inp}}\n'.format(int(controller.PwC_Mode)))
         file.write('\n')
         file.write('!------- FILTERS ----------------------------------------------------------\n') 
         file.write('{:<13.5f}       ! F_LPFCornerFreq	- Corner frequency (-3dB point) in the low-pass filters, [rad/s]\n'.format(turbine.bld_edgewise_freq * 1/4)) 
@@ -940,6 +940,22 @@ class FileProcessing():
 
             for time, rating in zip(controller.SoftStart.tt,controller.SoftStart.R_ss):
                 file.write('{:<08.5f}\t\t{:<08.5f}\n'.format(time,rating))
+
+    def write_soft_cut_out(self,controller,*args):
+        # optional arg is ol_filename
+
+        if not args:
+            ol_filename = controller.SoftCutOut.filename
+        else:
+            ol_filename = args[0]
+
+        with open(ol_filename,'w') as file:
+            print('Writing new open loop power input file: %s.' % ol_filename)
+            file.write('!\tWind Speed\t\tRating\n')
+            file.write('!\t(m/s)\t\t\t(-)\n')
+
+            for ws, rating in zip(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu):
+                file.write('\t{:<08.5f}\t\t{:<08.5f}\n'.format(ws,rating))
 
 
 
