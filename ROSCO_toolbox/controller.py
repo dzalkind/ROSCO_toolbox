@@ -159,6 +159,11 @@ class Controller():
             self.SoftStart = SoftStart(self,controller_params['soft_start'])
             self.PwC_ol_R_filename  = self.SoftStart.filename
 
+        # soft cut-out (open loop power vs. wind speed)
+        if 'soft_cut_out' in controller_params:
+            self.SoftCutOut = SoftCutOut(self,controller_params['soft_cut_out'])
+            self.PwC_ol_R_filename  = self.SoftCutOut.filename
+
     def tune_controller(self, turbine):
         """
         Given a turbine model, tune a controller based on the NREL generic controller tuning process
@@ -472,21 +477,21 @@ class SoftStart():
         TODO: Eventually, make general open loop power class that this will inherit
     '''
 
-    def __init__(self,controller,soft_params):
+    def __init__(self,controller,soft_start_params):
         
         # set default parameters
-        if 'R_start' in soft_params:
-            R_start = soft_params['R_start']
+        if 'R_start' in soft_start_params:
+            R_start = soft_start_params['R_start']
         else:
             R_start = 0.75  # default
 
-        if 'T_fullP' in soft_params:
-            T_fullP = soft_params['T_fullP']
+        if 'T_fullP' in soft_start_params:
+            T_fullP = soft_start_params['T_fullP']
         else:
             T_fullP = 60  # default
 
-        if 'filename' in soft_params:
-            filename = soft_params['filename']
+        if 'filename' in soft_start_params:
+            filename = soft_start_params['filename']
         else:
             filename = 'soft_start.dat'  # default
 
@@ -499,6 +504,38 @@ class SoftStart():
         # make timeseries
         self.tt         = np.linspace(0,T_fullP)
         self.R_ss       = sigma(self.tt,0,T_fullP,y0=R_start,y1=full_power)
+        self.filename   = filename
+
+class SoftCutOut():
+    '''
+    Open loop control for soft cut-out: power rating vs. slow LPF wind speed estimate
+
+            attributes:     uu - wind speed breakpoints
+                            R_scu - power rating at wind speed breakpoints 
+                        filename - open loop filename
+
+        note: could be generalized to any power rating vs. wind speed if desired in future
+    '''
+    def __init__(self,controller,soft_cut_params):
+        
+        # set default parameters
+        if 'wind_speeds' in soft_cut_params:
+            u_bp = soft_cut_params['wind_speeds']
+        else:
+            u_bp = [0.,50.]
+            print('WARNING: Soft cut-out wind_speeds not set')
+
+        if 'power_reference' in soft_cut_params:
+            R_bp = soft_cut_params['power_reference']
+        else:
+            R_bp = [1.,1.]
+            print('WARNING: Soft cut-out power_reference not set')
+
+        filename = 'soft_cut_out.dat'
+
+        # interpolate
+        self.uu         = np.linspace(min(u_bp),max(u_bp),num=100)
+        self.R_scu      = interpolate.pchip_interpolate(u_bp,R_bp,self.uu)
         self.filename   = filename
         
 class ControllerBlocks():

@@ -41,7 +41,7 @@ turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory
 controller.tune_controller(turbine)
 
 # Plot minimum pitch schedule
-if False:
+if True:
     plt.figure(1)
     plt.plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
     plt.legend()
@@ -54,6 +54,11 @@ if False:
     plt.xlabel('Time (sec.)')
     plt.ylabel('Power Rating (-)')
 
+    plt.figure(3)
+    plt.plot(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu)
+    plt.xlabel('Wind Speed (m/s)')
+    plt.ylabel('Power Rating (-)')
+
     plt.show()
 
 
@@ -61,6 +66,7 @@ if False:
 param_file = '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/DISCON.IN'   
 file_processing.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
 file_processing.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
+file_processing.write_soft_cut_out(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_cut_out_example.dat')
 # file_processing.write_ol_power(controller)
 
 

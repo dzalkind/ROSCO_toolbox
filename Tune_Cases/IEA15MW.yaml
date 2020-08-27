@@ -40,7 +40,7 @@ controller_params:
   SD_Mode:            0                     # Shutdown mode {0: no shutdown procedure, 1: pitch to max pitch at shutdown}
   Fl_Mode:            1                     # Floating specific feedback mode {0: no nacelle velocity feedback, 1: nacelle velocity feedback}
   Flp_Mode:           0                     # Flap control mode {0: no flap control, 1: steady state flap angle, 2: Proportional flap control}
-  PwC_Mode:           1                     # Active Power Control Mode {0: no active power control, constant power, 1: enable active power control in open loop}
+  PwC_Mode:           1                     # Active Power Control Mode {0: no active power control, constant power, 1: enable active power control in open loop, 2: open loop power, 3: open loop power vs. wind speed}
   # Controller parameters       
   zeta_pc:            1.0                   # Pitch controller desired damping ratio [-]
   omega_pc:           0.3                  # Pitch controller desired natural frequency [rad/s]
@@ -63,3 +63,6 @@ controller_params:
     R_start:  .65                           # starting power rating
     T_fullP:  100                            # time when PwC_const_R is reached
     filename: "/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat"              # PwC_ol_R_filename if soft_start exists
+  soft_cut_out:
+    wind_speeds: [0,10,20,25,40]
+    power_reference: [1,1,1,.7,0]
