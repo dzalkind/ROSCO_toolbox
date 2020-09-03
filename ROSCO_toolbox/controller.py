@@ -73,7 +73,7 @@ class Controller():
             self.omega_flp = controller_params['omega_flp']
 
         # Optional parameters, default to standard if not defined
-        if controller_params['min_pitch']:
+        if isinstance(controller_params['min_pitch'], float):
             self.min_pitch = controller_params['min_pitch']
         else:
             self.min_pitch = None
@@ -218,7 +218,14 @@ class Controller():
             Cp_TSR = np.ndarray.flatten(turbine.Cp.interp_surface(turbine.pitch_initial_rad, TSR_op[i]))     # all Cp values for a given tsr
             Cp_op[i] = np.clip(Cp_op[i], np.min(Cp_TSR), np.max(Cp_TSR))        # saturate Cp values to be on Cp surface
             f_cp_pitch = interpolate.interp1d(Cp_TSR,pitch_initial_rad)         # interpolate function for Cp(tsr) values
-            pitch_op[i] = f_cp_pitch(Cp_op[i])                                  # expected operation blade pitch values
+            # expected operation blade pitch values
+            if v[i] <= turbine.v_rated and isinstance(self.min_pitch, float): # Below rated & defined min_pitch
+                pitch_op[i] = min(self.min_pitch, f_cp_pitch(Cp_op[i]))
+            elif isinstance(self.min_pitch, float):
+                pitch_op[i] = max(self.min_pitch, f_cp_pitch(Cp_op[i]))             
+            else:
+                pitch_op[i] = f_cp_pitch(Cp_op[i])     
+
             dCp_beta[i], dCp_TSR[i] = turbine.Cp.interp_gradient(pitch_op[i],TSR_op[i])       # gradients of Cp surface in Beta and TSR directions
             dCt_beta[i], dCt_TSR[i] = turbine.Ct.interp_gradient(pitch_op[i],TSR_op[i])       # gradients of Cp surface in Beta and TSR directions
         
@@ -230,9 +237,8 @@ class Controller():
 
 
         # Define minimum pitch saturation to be at Cp-maximizing pitch angle if not specifically defined
-        if not self.min_pitch:
-            self.min_pitch = 0.0
-            self.min_pitch = max(self.min_pitch,pitch_op[0])
+        if not isinstance(self.min_pitch, float):
+            self.min_pitch = pitch_op[0]
 
         # Full Cx surface gradients
         dCp_dbeta   = dCp_beta/np.diff(pitch_initial_rad)[0]
@@ -274,7 +280,7 @@ class Controller():
         self.vs_gain_schedule.second_order_PI(self.zeta_vs, self.omega_vs,A_vs,B_tau[0:len(v_below_rated)],linearize=False,v=v_below_rated)
 
         # -- Find K for Komega_g^2 --
-        self.vs_rgn2K = (pi*rho*R**5.0 * turbine.Cp.max) / (2.0 * turbine.Cp.TSR_opt**3 * Ng**3)
+        self.vs_rgn2K = (pi*rho*R**5.0 * turbine.Cp.max) / (2.0 * turbine.Cp.TSR_opt**3 * Ng**3)/ (turbine.GenEff/100 * turbine.GBoxEff/100)
         self.vs_refspd = min(turbine.TSR_operational * turbine.v_rated/R, turbine.rated_rotor_speed) * Ng
 
         # -- Define some setpoints --
@@ -371,7 +377,18 @@ class Controller():
         for i, _ in enumerate(self.v):
             turbine.cc_rotor.induction_inflow=True
             # Axial and tangential inductions
-            a, ap, alpha0, cl, cd = turbine.cc_rotor.distributedAeroLoads(self.v[i], self.omega_op[i], self.pitch_op[i], 0.0)
+            try: 
+                a, ap, alpha0, cl, cd = turbine.cc_rotor.distributedAeroLoads(
+                                                self.v[i], self.omega_op[i], self.pitch_op[i], 0.0)
+            except ValueError:
+                loads, derivs = turbine.cc_rotor.distributedAeroLoads(
+                                                self.v[i], self.omega_op[i], self.pitch_op[i], 0.0)
+                a = loads['a']
+                ap = loads['ap']
+                alpha0 = loads['alpha']
+                cl = loads['Cl']
+                cd = loads['Cd']
+                 
             # Relative windspeed
             v_rel.append([np.sqrt(self.v[i]**2*(1-a)**2 + self.omega_op[i]**2*turbine.span**2*(1-ap)**2)])
             # Inflow wind direction
@@ -580,7 +597,7 @@ class ControllerBlocks():
                 Ct_max[i] = np.minimum( np.max(Ct_tsr), Ct_max[i])
             # Define minimum pitch angle
             f_pitch_min = interpolate.interp1d(Ct_tsr, turbine.pitch_initial_rad, bounds_error=False, fill_value=(turbine.pitch_initial_rad[0],turbine.pitch_initial_rad[-1]))
-            pitch_min[i] = f_pitch_min(Ct_max[i])
+            pitch_min[i] = max(controller.min_pitch, f_pitch_min(Ct_max[i]))
 
         controller.ps_min_bld_pitch = pitch_min
 

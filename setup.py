@@ -31,7 +31,7 @@ URL = 'https://github.com/NREL/ROSCO_toolbox'
 EMAIL = 'nikhar.abbas@nrel.gov'
 AUTHOR = 'NREL National Wind Technology Center'
 REQUIRES_PYTHON = '>=3.4'
-VERSION = '2.1.0'
+VERSION = '2.1.4'
 
 # These packages are required for all of the code to be executed. 
 # - Maybe you can get away with older versions...
@@ -95,15 +95,15 @@ class UploadCommand(Command):
 
     def run(self):
         try:
-            self.status('Removing previous builds…')
+            self.status('Removing previous builds...')
             rmtree(os.path.join(here, 'dist'))
         except OSError:
             pass
 
-        self.status('Building Source and Wheel (universal) distribution…')
+        self.status('Building Source and Wheel (universal) distribution...')
         os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
 
-        self.status('Uploading the package to PyPI via Twine…')
+        self.status('Uploading the package to PyPI via Twine...')
         os.system('twine upload dist/*')
 
         self.status('Pushing git tags…')
