@@ -163,6 +163,10 @@ class Controller():
             self.SoftCutOut = SoftCutOut(self,controller_params['soft_cut_out'])
             self.PwC_ol_R_filename  = self.SoftCutOut.filename
 
+        if 'open_loop' in controller_params:
+            self.OpenLoopControl = OpenLoopControl(controller_params['open_loop'])
+
+
     def tune_controller(self, turbine):
         """
         Given a turbine model, tune a controller based on the NREL generic controller tuning process
@@ -682,6 +686,49 @@ class ControllerTypes():
         self.Kp = 1/B * (2*zeta*om_n + A)
         self.Ki = om_n**2/B           
 
+class OpenLoopControl(object):
+    '''
+    attributes:
+    - time: breakpoint of times
+    - generator_torque: generator torque vs. time (optional)
+    - blade_pitch: blade pitch angle vs. time (optional)
+
+    '''
+
+    def __init__(self,ol_control_params):
+        self.dt = 1/20
+
+        ol_timeseries = {}
+        if 'time' in ol_control_params:
+            ol_timeseries['time'] = np.arange(ol_control_params['time'][0],ol_control_params['time'][-1],self.dt)
+        else:    
+            raise Exception('WARNING: no time index for open loop control.  This is only index currently supported')
+
+
+        if 'blade_pitch' in ol_control_params:
+            ol_timeseries['blade_pitch'] = multi_sigma(ol_timeseries['time'],ol_control_params['time'],ol_control_params['blade_pitch'])
+
+        if 'generator_torque' in ol_control_params:
+            ol_timeseries['generator_torque'] = multi_sigma(ol_timeseries['time'],ol_control_params['time'],ol_control_params['generator_torque'])
+
+        self.ol_timeseries = ol_timeseries
+
+        
+
+    def write_ol_control(self):
+        ''' 
+        Write open loop control input
+        '''
+        
+        if 'time' in ol_timeseries:
+            ol_control_array = np.empty([len(self.ol_timeseries['time'])])
+        else:
+            print('WARNING: no time index for open loop control.  This is only index currently supported')
+
+
+
+        print('here')
+
 
 # helper functions
 
@@ -712,3 +759,21 @@ def sigma(tt,t0,t1,y0=0,y1=1):
     yy = (y1-y0) * ss + y0      # scale and offset
 
     return yy
+
+
+def multi_sigma(tt,t_bp,y_bp):
+    yy = np.empty([len(tt)])
+    for i_sigma in range(0,len(t_bp)-1):
+        ind_i       = (tt >= t_bp[i_sigma]) & (tt < t_bp[i_sigma+1])
+        tt_i        = tt[ind_i]
+        yy_i        = sigma(tt_i,t_bp[i_sigma],t_bp[i_sigma+1],y0=y_bp[i_sigma],y1=y_bp[i_sigma+1])
+        yy[ind_i]   = yy_i
+
+    if False:  # debug plot
+        import matplotlib.pyplot as plt
+        plt.plot(tt,yy)
+        plt.show()
+        print('here')
+
+    return yy
+
