@@ -75,6 +75,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{0:<12d}        ! SD_Mode           - Shutdown mode {{0: no shutdown procedure, 1: pitch to max pitch at shutdown}}\n'.format(int(controller.SD_Mode)))
     file.write('{0:<12d}        ! Fl_Mode           - Floating specific feedback mode {{0: no nacelle velocity feedback, 1: nacelle velocity feedback}}\n'.format(int(controller.Fl_Mode)))
     file.write('{0:<12d}        ! Flp_Mode          - Flap control mode {{0: no flap control, 1: steady state flap angle, 2: Proportional flap control}}\n'.format(int(controller.Flp_Mode)))
+    file.write('{0:<12d}        ! PwC_Mode          - Power control mode {{0: no power control, 1: constant power, 2: open loop power from PwC_OpenLoop_Inp, 3: open loop power vs. wind speed from PwC_OpenLoop_Inp}}\n'.format(int(controller.PwC_Mode)))
     file.write('\n')
     file.write('!------- FILTERS ----------------------------------------------------------\n') 
     file.write('{:<13.5f}       ! F_LPFCornerFreq	- Corner frequency (-3dB point) in the low-pass filters, [rad/s]\n'.format(turbine.bld_edgewise_freq * 1/4)) 
@@ -102,9 +103,9 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<014.5f}      ! PC_Switch			- Angle above lowest minimum pitch angle for switch, [rad]\n'.format(1 * deg2rad))
     file.write('\n')
     file.write('!------- INDIVIDUAL PITCH CONTROL -----------------------------------------\n')
-    file.write('{:<13.1f}       ! IPC_IntSat		- Integrator saturation (maximum signal amplitude contribution to pitch from IPC), [rad]\n'.format(0.087266)) # Hardcode to 5 degrees
-    file.write('{:<13.1e} {:<6.1f}! IPC_KI			- Integral gain for the individual pitch controller: first parameter for 1P reductions, second for 2P reductions, [-]\n'.format(controller.Ki_ipc1p,0.0))
-    file.write('{:<13.1e} {:<6.1f}! IPC_aziOffset		- Phase offset added to the azimuth angle for the individual pitch controller, [rad]. \n'.format(0.0,0.0))
+    file.write('{:<13.1f}       ! IPC_IntSat		- Integrator saturation (maximum signal amplitude contribution to pitch from IPC), [rad]\n'.format(0.0))
+    file.write('{:<6.1f}{:<13.1f} ! IPC_KI			- Integral gain for the individual pitch controller: first parameter for 1P reductions, second for 2P reductions, [-]\n'.format(0.0,0.0))
+    file.write('{:<6.1f}{:<13.1f} ! IPC_aziOffset		- Phase offset added to the azimuth angle for the individual pitch controller, [rad]. \n'.format(0.0,0.0))
     file.write('{:<13.1f}       ! IPC_CornerFreqAct - Corner frequency of the first-order actuators model, to induce a phase lag in the IPC signal {{0: Disable}}, [rad/s]\n'.format(0.0))
     file.write('\n')
     file.write('!------- VS TORQUE CONTROL ------------------------------------------------\n')
@@ -164,6 +165,13 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{}              ! PS_WindSpeeds     - Wind speeds corresponding to minimum blade pitch angles [m/s]\n'.format(''.join('{:<4.2f} '.format(controller.v[i]) for i in range(len(controller.v)))))
     file.write('{}              ! PS_BldPitchMin    - Minimum blade pitch angles [rad]\n'.format(''.join('{:<10.8f} '.format(controller.ps_min_bld_pitch[i]) for i in range(len(controller.ps_min_bld_pitch)))))
     file.write('\n')
+    file.write('!------- POWER CONTROL -------------------------------------------\n')
+    file.write('{:<11d}         ! PwC_LUT_N          - Number of values in minimum blade pitch lookup table (should equal number of values in PwC_PwrRating and PwC_BldPitchMin)\n'.format(len(controller.PwC_R)))
+    file.write('{}              ! PwC_PwrRating      - Wind speeds corresponding to minimum blade pitch angles [m/s]\n'.format(''.join('{:<4.8f} '.format(controller.PwC_R[i]) for i in range(len(controller.PwC_R)))))
+    file.write('{}              ! PwC_BldPitchMin    - Minimum blade pitch angles [rad]\n'.format(''.join('{:<10.8f} '.format(controller.PwC_B[i]) for i in range(len(controller.PwC_R)))))
+    file.write('{:<014.5f}      ! PwC_ConstPwr         - Constant power rating [used if PwC_Mode = 1]\n'.format(controller.PwC_const_R))
+    file.write(      '"{}"      ! PwC_OpenLoop_Inp  - Filename of open-loop power input\n'.format(controller.PwC_ol_R_filename))
+    file.write('\n')
     file.write('!------- SHUTDOWN -----------------------------------------------------------\n')
     file.write('{:<014.5f}      ! SD_MaxPit         - Maximum blade pitch angle to initiate shutdown, [rad]\n'.format(controller.sd_maxpit))
     file.write('{:<014.5f}      ! SD_CornerFreq     - Cutoff Frequency for first order low-pass filter for blade pitch angle, [rad/s]\n'.format(controller.sd_cornerfreq))
@@ -177,6 +185,9 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<014.8e}      ! Flp_Ki            - Flap displacement integral gain for flap control [s]\n'.format(controller.Ki_flap[-1]))
     file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]'.format(controller.flp_maxpit))
     file.close()
+
+    if hasattr(controller,'SoftStart'):
+        write_ol_power(controller)
 
 def read_DISCON(DISCON_filename):
     '''
@@ -497,3 +508,34 @@ def run_openfast(fast_dir,fastcall='OpenFAST',fastfile=None,chdir=False):
         os.system('{} {}'.format(fastcall, os.path.join(fast_dir,fastfile)))
         print('OpenFAST simulation complete. ')
 
+def write_ol_power(controller,*args):
+        # optional arg is ol_filename
+
+    if not args:
+        ol_filename = controller.SoftStart.filename
+    else:
+        ol_filename = args[0]
+
+    with open(ol_filename,'w') as file:
+        print('Writing new open loop power input file: %s.' % ol_filename)
+        file.write('!\tTime\t\tRating\n')
+        file.write('!\t(sec)\t\t(-)\n')
+
+        for time, rating in zip(controller.SoftStart.tt,controller.SoftStart.R_ss):
+            file.write('{:<08.5f}\t\t{:<08.5f}\n'.format(time,rating))
+
+def write_soft_cut_out(controller,*args):
+    # optional arg is ol_filename
+
+    if not args:
+        ol_filename = controller.SoftCutOut.filename
+    else:
+        ol_filename = args[0]
+
+    with open(ol_filename,'w') as file:
+        print('Writing new open loop power input file: %s.' % ol_filename)
+        file.write('!\tWind Speed\t\tRating\n')
+        file.write('!\t(m/s)\t\t\t(-)\n')
+
+        for ws, rating in zip(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu):
+            file.write('\t{:<08.5f}\t\t{:<08.5f}\n'.format(ws,rating))
