@@ -11,7 +11,7 @@ In this example:
 
 '''
 # Python Modules
-import yaml
+import yaml, os
 # ROSCO toolbox modules 
 from ROSCO_toolbox import controller as ROSCO_controller
 from ROSCO_toolbox import turbine as ROSCO_turbine
@@ -32,10 +32,13 @@ controller_params   = inps['controller_params']
 # Instantiate turbine, controller, and file processing classes
 turbine         = ROSCO_turbine.Turbine(turbine_params)
 controller      = ROSCO_controller.Controller(controller_params)
-file_processing = ROSCO_utilities.FileProcessing()
 
 # Load turbine data from OpenFAST and rotor performance text file
-turbine.load_from_fast(path_params['FAST_InputFile'],path_params['FAST_directory'],dev_branch=True,rot_source='txt',txt_filename=path_params['rotor_performance_filename'])
+rt_dir = os.path.dirname(os.path.dirname(__file__))
+turbine.load_from_fast(path_params['FAST_InputFile'], \
+  os.path.join(rt_dir,path_params['FAST_directory']), \
+    dev_branch=True,rot_source='txt', \
+      txt_filename= os.path.join(rt_dir,path_params['FAST_directory'],path_params['rotor_performance_filename']))
 
 # Tune controller 
 controller.tune_controller(turbine)
@@ -64,9 +67,9 @@ if True:
 
 # Write parameter input file
 param_file = '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/DISCON.IN'   
-file_processing.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
-file_processing.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
-file_processing.write_soft_cut_out(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_cut_out_example.dat')
+ROSCO_utilities.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
+ROSCO_utilities.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
+ROSCO_utilities.write_soft_cut_out(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_cut_out_example.dat')
 # file_processing.write_ol_power(controller)
 
 
