@@ -3,7 +3,7 @@ IEA 15 MW offshore reference model on UMaine VolturnUS-S semi-submersible floati
 ---------------------- SIMULATION CONTROL -------------------------------------- 
 False                  Echo        - Echo input data to <RootName>.ech (flag) 
 "FATAL"                AbortLevel  - Error level when simulation should abort (string) {"WARNING", "SEVERE", "FATAL"} 
-10.0                   TMax        - Total run time (s) 
+120.0                   TMax        - Total run time (s) 
 0.025                  DT          - Integration time step (s)  
 2                      InterpOrder - Interpolation order for input/output time history (-) {1=linear, 2=quadratic} 
 0                      NumCrctn    - Number of correction iterations (-) {0=explicit calculation, i.e., no corrections} 
@@ -16,7 +16,7 @@ False                  Echo        - Echo input data to <RootName>.ech (flag)
       1   CompServo       - Compute control and electrical-drive dynamics (switch) {0=None; 1=ServoDyn} 
       1   CompHydro       - Compute hydrodynamic loads (switch) {0=None; 1=HydroDyn} 
       0   CompSub         - Compute sub-structural dynamics (switch) {0=None; 1=SubDyn}  
-      3   CompMooring     - Compute mooring system (switch) {0=None; 1=MAP++; 2=FEAMooring; 3=MoorDyn; 4=OrcaFlex} 
+      0   CompMooring     - Compute mooring system (switch) {0=None; 1=MAP++; 2=FEAMooring; 3=MoorDyn; 4=OrcaFlex} 
       0   CompIce         - Compute ice loads (switch) {0=None; 1=IceFloe; 2=IceDyn} 
 ---------------------- INPUT FILES --------------------------------------------- 
 "IEA-15-240-RWT-UMaineSemi_ElastoDyn.dat"    EDFile          - Name of file containing ElastoDyn input parameters (quoted string) 

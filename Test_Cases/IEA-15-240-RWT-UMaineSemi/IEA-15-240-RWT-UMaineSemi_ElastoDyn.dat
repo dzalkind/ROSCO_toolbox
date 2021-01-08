@@ -18,8 +18,8 @@ True          TwFADOF1    - First fore-aft tower bending-mode DOF (flag)
 True          TwFADOF2    - Second fore-aft tower bending-mode DOF (flag)
 True          TwSSDOF1    - First side-to-side tower bending-mode DOF (flag)
 True          TwSSDOF2    - Second side-to-side tower bending-mode DOF (flag)
-True          PtfmSgDOF   - Platform horizontal surge translation DOF (flag)
-True          PtfmSwDOF   - Platform horizontal sway translation DOF (flag)
+False          PtfmSgDOF   - Platform horizontal surge translation DOF (flag)
+False          PtfmSwDOF   - Platform horizontal sway translation DOF (flag)
 True          PtfmHvDOF   - Platform vertical heave translation DOF (flag)
 True          PtfmRDOF    - Platform roll tilt rotation DOF (flag)
 True          PtfmPDOF    - Platform pitch tilt rotation DOF (flag)
@@ -27,9 +27,9 @@ True          PtfmYDOF    - Platform yaw rotation DOF (flag)
 ---------------------- INITIAL CONDITIONS --------------------------------------
           0   OoPDefl     - Initial out-of-plane blade-tip displacement (meters)
           0   IPDefl      - Initial in-plane blade-tip deflection (meters)
-         1.   BlPitch(1)  - Blade 1 initial pitch (degrees)
-         1.   BlPitch(2)  - Blade 2 initial pitch (degrees)
-         1.   BlPitch(3)  - Blade 3 initial pitch (degrees) [unused for 2 blades]
+         10.   BlPitch(1)  - Blade 1 initial pitch (degrees)
+         10.   BlPitch(2)  - Blade 2 initial pitch (degrees)
+         10.   BlPitch(3)  - Blade 3 initial pitch (degrees) [unused for 2 blades]
           0   TeetDefl    - Initial or fixed teeter angle (degrees) [unused for 3 blades]
           0   Azimuth     - Initial azimuth angle for blade 1 (degrees)
          6.   RotSpeed    - Initial or fixed rotor speed (rpm)
