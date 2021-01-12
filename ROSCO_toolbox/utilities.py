@@ -574,8 +574,21 @@ def write_ol_control(self):
     
     with open(self.OL_Filename,'w') as f:
         # Write header
-        f.write('!\t{}\t\t{}\t\t{}\n'.format('Time','BldPitch','GenTq'))
-        f.write('!\t{}\t\t{}\t\t{}\n'.format('(s.)','(rad.)','(Nm)'))
+        header_line = '!\tTime'
+        unit_line   = '!\t(sec.)'
+        if self.OL_Ind_BldPitch:
+            header_line += '\t\tBldPitch'
+            unit_line   += '\t\t(rad.)'
+
+        if self.OL_Ind_GenTq:
+            header_line += '\t\tGenTq'
+            unit_line   += '\t\t(Nm)'
+
+        header_line += '\n'
+        unit_line   += '\n'
+
+        f.write(header_line)
+        f.write(unit_line)
 
         # Write lines
         for ol_line in ol_control_array:

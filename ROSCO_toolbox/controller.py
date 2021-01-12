@@ -181,9 +181,12 @@ class Controller():
 
                 if 'generator_torque' in controller_params['open_loop']:
                     self.OL_Ind_GenTq = 3
+                else:
+                    self.OL_Ind_GenTq = 0
 
             elif 'generator_torque' in controller_params['open_loop']:
-                self.OL_Ind_GenTq = 2
+                self.OL_Ind_GenTq       = 2
+                self.OL_Ind_BldPitch    = 0
 
             else:
                 raise Exception('No open loop values specified in control dict')
