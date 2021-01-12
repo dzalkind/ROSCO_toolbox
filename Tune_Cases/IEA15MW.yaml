@@ -40,7 +40,7 @@ controller_params:
   SD_Mode:            0                     # Shutdown mode {0: no shutdown procedure, 1: pitch to max pitch at shutdown}
   Fl_Mode:            1                     # Floating specific feedback mode {0: no nacelle velocity feedback, 1: nacelle velocity feedback}
   Flp_Mode:           0                     # Flap control mode {0: no flap control, 1: steady state flap angle, 2: Proportional flap control}
-  PwC_Mode:           2                     # Active Power Control Mode {0: no active power control 1: constant active power control, 2: open loop power vs time, 3: open loop power vs. wind speed}
+  # PwC_Mode:           2                     # Active Power Control Mode {0: no active power control 1: constant active power control, 2: open loop power vs time, 3: open loop power vs. wind speed}
   # Controller parameters       
   zeta_pc:            1.0                   # Pitch controller desired damping ratio [-]
   omega_pc:           0.3                  # Pitch controller desired natural frequency [rad/s]
@@ -58,15 +58,16 @@ controller_params:
   sd_cornerfreq:      # None                # Cutoff Frequency for first order low-pass filter for blade pitch angle [rad/s], {default = 0.41888 ~ time constant of 15s}
   flp_maxpit:         # None                  # Maximum (and minimum) flap pitch angle [rad]
   PwC_const_R:        1.                     # constant power rating
-  PwC_ol_R_filename:  "soft_start.dat"      # Open loop power rating
-  soft_start:             
-    R_start:  .8                           # starting power rating
-    T_fullP:  60                            # time when PwC_const_R is reached
-    filename: "/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat"              # PwC_ol_R_filename if soft_start exists
+  # PwC_ol_R_filename:  "soft_start.dat"      # Open loop power rating
+  # soft_start:             
+  #   R_start:  .8                           # starting power rating
+  #   T_fullP:  60                            # time when PwC_const_R is reached
+  #   filename: "/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat"              # PwC_ol_R_filename if soft_start exists
   # soft_cut_out:
   #   wind_speeds: [0,10,20,25,40]
   #   power_reference: [1,1,1,.7,0]
   open_loop:
     time: [0,40,80,120]           # breakpoint
-    blade_pitch: [10,15,5,8]      # degrees
-    generator_torque: [19624046,19624046,19624046,19624046]  #kNm
+    blade_pitch: [0.1745,0.2618,0.0873,0.1396]      # radians
+    generator_torque: [19624046,19624046,19624046,19624046]  #Nm
+    filename: '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/ol_test.dat'
