@@ -76,6 +76,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{0:<12d}        ! Fl_Mode           - Floating specific feedback mode {{0: no nacelle velocity feedback, 1: nacelle velocity feedback}}\n'.format(int(controller.Fl_Mode)))
     file.write('{0:<12d}        ! Flp_Mode          - Flap control mode {{0: no flap control, 1: steady state flap angle, 2: Proportional flap control}}\n'.format(int(controller.Flp_Mode)))
     file.write('{0:<12d}        ! PwC_Mode          - Power control mode {{0: no power control, 1: constant power, 2: open loop power from PwC_OpenLoop_Inp, 3: open loop power vs. wind speed from PwC_OpenLoop_Inp}}\n'.format(int(controller.PwC_Mode)))
+    file.write('{0:<12d}        ! OL_Mode           - Open loop control mode {{0: no open loop control, 1: open loop control vs. time, 2: open loop control vs. wind speed}}\n'.format(int(controller.OL_Mode)))
     file.write('\n')
     file.write('!------- FILTERS ----------------------------------------------------------\n') 
     file.write('{:<13.5f}       ! F_LPFCornerFreq	- Corner frequency (-3dB point) in the low-pass filters, [rad/s]\n'.format(turbine.bld_edgewise_freq * 1/4)) 
@@ -183,7 +184,13 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<014.5f}      ! Flp_Angle         - Initial or steady state flap angle [rad]\n'.format(controller.flp_angle))
     file.write('{:<014.8e}      ! Flp_Kp            - Blade root bending moment proportional gain for flap control [s]\n'.format(controller.Kp_flap[-1]))
     file.write('{:<014.8e}      ! Flp_Ki            - Flap displacement integral gain for flap control [s]\n'.format(controller.Ki_flap[-1]))
-    file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]'.format(controller.flp_maxpit))
+    file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]\n'.format(controller.flp_maxpit))
+    file.write('\n')
+    file.write('!------- Open Loop Control -----------------------------------------------------\n')
+    file.write('"{}"            ! OL_Filename       - Input file with open loop timeseries\n'.format(controller.OL_Filename))
+    file.write('{0:<12d}        ! Ind_Breakpoint    - The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)\n'.format(controller.OL_Ind_Breakpoint))
+    file.write('{0:<12d}        ! Ind_BldPitch      - The column in OL_Filename that contains the blade pitch input in rad\n'.format(controller.OL_Ind_BldPitch))
+    file.write('{0:<12d}        ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm\n'.format(controller.OL_Ind_GenTq))
     file.close()
 
     if hasattr(controller,'SoftStart'):
@@ -539,3 +546,38 @@ def write_soft_cut_out(controller,*args):
 
         for ws, rating in zip(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu):
             file.write('\t{:<08.5f}\t\t{:<08.5f}\n'.format(ws,rating))
+
+
+def write_ol_control(self):
+    ''' 
+    Write open loop control input
+    '''
+
+    ol_timeseries = self.OpenLoopControl.ol_timeseries
+    
+    if 'time' in ol_timeseries:
+        ol_control_array = np.empty([len(ol_timeseries['time']),len(ol_timeseries)])
+        ol_control_array[:,0] = ol_timeseries['time']
+
+    else:
+        print('WARNING: no time index for open loop control.  This is only index currently supported')
+
+    if 'blade_pitch' in ol_timeseries:
+        ol_control_array[:,self.OL_Ind_BldPitch-1] = ol_timeseries['blade_pitch']
+
+    if 'generator_torque' in ol_timeseries:
+        ol_control_array[:,self.OL_Ind_GenTq-1] = ol_timeseries['generator_torque']
+
+    # Open file
+    if not os.path.exists(os.path.dirname(os.path.abspath(self.OL_Filename))):
+        os.makedirs(os.path.dirname(os.path.abspath(self.OL_Filename)))
+    
+    with open(self.OL_Filename,'w') as f:
+        # Write header
+        f.write('!\t{}\t\t{}\t\t{}\n'.format('Time','BldPitch','GenTq'))
+        f.write('!\t{}\t\t{}\t\t{}\n'.format('(s.)','(rad.)','(Nm)'))
+
+        # Write lines
+        for ol_line in ol_control_array:
+            line = ''.join(['{:<10.8f}\t'.format(val) for val in ol_line]) + '\n'
+            f.write(line)
