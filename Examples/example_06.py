@@ -16,7 +16,7 @@ import os
 # ROSCO toolbox modules 
 from ROSCO_toolbox import controller as ROSCO_controller
 from ROSCO_toolbox import turbine as ROSCO_turbine
-from ROSCO_toolbox.utilities import write_DISCON, run_openfast
+from ROSCO_toolbox.utilities import write_DISCON, run_openfast, write_ol_control
 from ROSCO_toolbox import sim as ROSCO_sim
 from ROSCO_toolbox.ofTools.fast_io import output_processing
 
@@ -46,6 +46,7 @@ controller.tune_controller(turbine)
 # Write parameter input file
 param_file = os.path.join(this_dir,'DISCON.IN')   # This must be named DISCON.IN to be seen by the compiled controller binary. 
 write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
+write_ol_control(controller)
 
 # Run OpenFAST
 # --- May need to change fastcall if you use a non-standard command to call openfast
