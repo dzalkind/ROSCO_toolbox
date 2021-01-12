@@ -162,9 +162,45 @@ class Controller():
         if 'soft_cut_out' in controller_params:
             self.SoftCutOut = SoftCutOut(self,controller_params['soft_cut_out'])
             self.PwC_ol_R_filename  = self.SoftCutOut.filename
-
+            
         if 'open_loop' in controller_params:
-            self.OpenLoopControl = OpenLoopControl(controller_params['open_loop'])
+            # Set open loop control mode
+            if 'time' in controller_params['open_loop']:
+                self.OL_Mode = 1
+                self.OL_Ind_Breakpoint = 1
+            elif 'wind_speed' in controller_params['open_loop']:
+                self.OL_Mode = 2
+                self.OL_Ind_Breakpoint = 1
+            else:
+                self.OL_Mode = 0
+                print('WARNING: open loop breakpoint not specified in control dict, setting OL_Mode=0')
+
+            # Set open loop input indices (columns with input)  TODO: there's probably a cleaner way to do this when there are more inputs
+            if 'blade_pitch' in controller_params['open_loop']:
+                self.OL_Ind_BldPitch = 2
+
+                if 'generator_torque' in controller_params['open_loop']:
+                    self.OL_Ind_GenTq = 3
+
+            elif 'generator_torque' in controller_params['open_loop']:
+                self.OL_Ind_GenTq = 2
+
+            else:
+                raise Exception('No open loop values specified in control dict')
+
+            # Input file
+            if 'filename' in controller_params['open_loop']:
+                self.OL_Filename = controller_params['open_loop']['filename']
+            else:
+                self.OL_Filename = 'open_loop_input.dat'
+
+        else:
+            self.OL_Mode = 0
+
+        if self.OL_Mode:
+            self.OpenLoopControl = OpenLoopControl(self,controller_params['open_loop'])
+        else:
+            self.OL_InputFile = "unused"
 
 
     def tune_controller(self, turbine):
@@ -695,7 +731,7 @@ class OpenLoopControl(object):
 
     '''
 
-    def __init__(self,ol_control_params):
+    def __init__(self,controller,ol_control_params):
         self.dt = 1/20
 
         ol_timeseries = {}
@@ -711,23 +747,9 @@ class OpenLoopControl(object):
         if 'generator_torque' in ol_control_params:
             ol_timeseries['generator_torque'] = multi_sigma(ol_timeseries['time'],ol_control_params['time'],ol_control_params['generator_torque'])
 
-        self.ol_timeseries = ol_timeseries
+        self.ol_timeseries  = ol_timeseries
+        self.controller     = controller
 
-        
-
-    def write_ol_control(self):
-        ''' 
-        Write open loop control input
-        '''
-        
-        if 'time' in ol_timeseries:
-            ol_control_array = np.empty([len(self.ol_timeseries['time'])])
-        else:
-            print('WARNING: no time index for open loop control.  This is only index currently supported')
-
-
-
-        print('here')
 
 
 # helper functions
