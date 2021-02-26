@@ -161,7 +161,7 @@ class Turbine():
             txt_filename: str, optional
                           filename for *.txt, only used if rot_source='txt'
         """
-        from weis.aeroelasticse.FAST_reader import InputReader_OpenFAST
+        from ROSCO_toolbox.ofTools.fast_io.FAST_reader import InputReader_OpenFAST
 
         print('Loading FAST model: %s ' % FAST_InputFile)
         self.TurbineName = FAST_InputFile.strip('.fst')
@@ -313,10 +313,8 @@ class Turbine():
             'serial' - run in serial, 'multi' - run using python multiprocessing tools, 
             'mpi' - run using mpi tools
         '''
-
-        # Load additional WEIS tools
-        from weis.aeroelasticse import runFAST_pywrapper, CaseGen_General
-        from weis.aeroelasticse.Util import FileTools
+        from ROSCO_toolbox.ofTools.case_gen import runFAST_pywrapper, CaseGen_General
+        from ROSCO_toolbox.ofTools.util import FileTools
         # Load pCrunch tools
         from pCrunch import pdTools, Processing
 
@@ -498,7 +496,8 @@ class Turbine():
         -----------
             self - note: needs to contain fast input file info provided by load_from_fast.
         '''
-        from weis.aeroelasticse.FAST_reader import InputReader_OpenFAST
+        from ROSCO_toolbox.ofTools.fast_io.FAST_reader import InputReader_OpenFAST
+        from wisdem.ccblade.ccblade import CCAirfoil, CCBlade
 
         # Create CC-Blade Rotor
         r0 = np.array(self.fast.fst_vt['AeroDynBlade']['BlSpn']) 
@@ -546,7 +545,7 @@ class Turbine():
         self.span = r 
         self.chord = chord
         self.twist = theta
-        self.bld_flapwise_damp = self.fast.fst_vt['ElastoDynBlade']['BldFlDmp1']/100 * 0.7
+        self.bld_flapwise_damp = self.fast.fst_vt['ElastoDynBlade']['BldFlDmp1']/100
 
 class RotorPerformance():
     '''
