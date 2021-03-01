@@ -90,7 +90,9 @@ class TestExamples(unittest.TestCase):
 
     def test_example_11(self):
         run_all_scripts("example_11", all_scripts)
-                    
+
+    def test_example_12(self):
+        run_all_scripts("example_12", all_scripts)                    
 
 
 def suite():

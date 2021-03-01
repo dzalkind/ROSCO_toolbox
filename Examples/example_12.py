@@ -21,9 +21,11 @@ from ROSCO_toolbox import utilities as ROSCO_utilities
 import numpy as np
 import matplotlib.pyplot as plt
 
+this_dir = os.path.dirname(os.path.abspath(__file__))
+example_out_dir = os.path.join(this_dir,'examples_out')
 
 # Load yaml file 
-parameter_filename = '/Users/dzalkind/Tools/ROSCO_toolbox/Tune_Cases/IEA15MW.yaml'
+parameter_filename = '/Users/dzalkind/Tools/ROSCO_toolbox/Tune_Cases/IEA15MW_PwC.yaml'
 inps = yaml.safe_load(open(parameter_filename))
 path_params         = inps['path_params']
 turbine_params      = inps['turbine_params']
@@ -44,33 +46,41 @@ turbine.load_from_fast(path_params['FAST_InputFile'], \
 controller.tune_controller(turbine)
 
 # Plot minimum pitch schedule
-if True:
-    plt.figure(1)
-    plt.plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
-    plt.legend()
-    plt.xlabel('Power Rating (-)')
-    plt.ylabel('Blade pitch (rad)')
-    plt.xlim((0,1.25))
+fig = [None] * 3
+ax  = [None] * 3
 
-    plt.figure(2)
-    plt.plot(controller.SoftStart.tt,controller.SoftStart.R_ss)
-    plt.xlabel('Time (sec.)')
-    plt.ylabel('Power Rating (-)')
+fig[0], ax[0] = plt.subplots(1,1)
+ax[0].plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
+ax[0].legend()
+ax[0].set_xlabel('Power Rating (-)')
+ax[0].set_ylabel('Blade pitch (rad)')
+ax[0].set_xlim((0,1.25))
 
-    plt.figure(3)
-    plt.plot(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu)
-    plt.xlabel('Wind Speed (m/s)')
-    plt.ylabel('Power Rating (-)')
+fig[1], ax[1] = plt.subplots(1,1)
+ax[1].plot(controller.SoftStart.tt,controller.SoftStart.R_ss)
+ax[1].set_xlabel('Time (sec.)')
+ax[1].set_ylabel('Power Rating (-)')
 
-    plt.show()
+fig[2], ax[2] = plt.subplots(1,1)
+ax[2].plot(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu)
+ax[2].set_xlabel('Wind Speed (m/s)')
+ax[2].set_ylabel('Power Rating (-)')
+
+if False:
+  plt.show()
+else:
+  for i,f in enumerate(fig):
+    f.savefig(os.path.join(example_out_dir,'12_PowerControl_' + str(i) + '.png'))
 
 
 # Write parameter input file
-param_file = '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/DISCON.IN'   
+param_file = 'examples_out/12_PwC_DISCON.IN'   
 ROSCO_utilities.write_DISCON(turbine,controller,param_file=param_file, txt_filename=path_params['rotor_performance_filename'])
-ROSCO_utilities.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
-ROSCO_utilities.write_soft_cut_out(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_cut_out_example.dat')
+# ROSCO_utilities.write_ol_power(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_start_example.dat')
+# ROSCO_utilities.write_soft_cut_out(controller,'/Users/dzalkind/Tools/ROSCO_toolbox/Examples/soft_cut_out_example.dat')
 # file_processing.write_ol_power(controller)
+
+
 
 
 
