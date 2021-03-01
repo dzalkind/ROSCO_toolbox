@@ -201,9 +201,12 @@ class Controller():
             self.OL_Mode = 0
 
         if self.OL_Mode:
-            self.OpenLoopControl = OpenLoopControl(self,controller_params['open_loop'])
+            self.OpenLoopControl    = OpenLoopControl(self,controller_params['open_loop'])
         else:
-            self.OL_InputFile = "unused"
+            self.OL_Filename        = "unused"
+            self.OL_Ind_Breakpoint  = 0
+            self.OL_Ind_BldPitch    = 0
+            self.OL_Ind_GenTq       = 0
 
 
     def tune_controller(self, turbine):
@@ -580,7 +583,10 @@ class SoftCutOut():
             R_bp = [1.,1.]
             print('WARNING: Soft cut-out power_reference not set')
 
-        filename = 'soft_cut_out.dat'
+        if 'filename' in soft_cut_params:
+            filename = soft_cut_params['filename']
+        else:
+            filename = 'soft_cut_out.dat'  # default
 
         # interpolate
         self.uu         = np.linspace(min(u_bp),max(u_bp),num=100)
