@@ -197,6 +197,9 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     if hasattr(controller,'SoftStart'):
         write_ol_power(controller)
 
+    if hasattr(controller,'SoftCutOut'):
+        write_soft_cut_out(controller)
+
 def read_DISCON(DISCON_filename):
     '''
     Read the DISCON input file.
