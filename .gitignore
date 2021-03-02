@@ -28,6 +28,10 @@ _build
 *.out
 *.outb
 *.dbg
+*.vtp
+
+# Temporary fortran files
+*fort.*
 
 # ROSCO files
 *.85
