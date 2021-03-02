@@ -170,9 +170,9 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('!------- POWER CONTROL -------------------------------------------\n')
     file.write('{:<11d}         ! PwC_LUT_N          - Number of values in minimum blade pitch lookup table (should equal number of values in PwC_PwrRating and PwC_BldPitchMin)\n'.format(len(controller.PwC_R)))
     file.write('{}              ! PwC_PwrRating      - Wind speeds corresponding to minimum blade pitch angles [m/s]\n'.format(''.join('{:<4.8f} '.format(controller.PwC_R[i]) for i in range(len(controller.PwC_R)))))
-    file.write('{}              ! PwC_BldPitchMin    - Minimum blade pitch angles [rad]\n'.format(''.join('{:<10.8f} '.format(controller.PwC_B[i]) for i in range(len(controller.PwC_R)))))
-    file.write('{:<014.5f}      ! PwC_ConstPwr         - Constant power rating [used if PwC_Mode = 1]\n'.format(controller.PwC_const_R))
-    file.write(      '"{}"      ! PwC_OpenLoop_Inp  - Filename of open-loop power input\n'.format(controller.PwC_ol_R_filename))
+    file.write('{}              ! PwC_BldPitchMin    - Minimum blade pitch angles [rad]\n'.format(''.join('{:<10.8f} '.format(controller.PwC_BldPitchMin[i]) for i in range(len(controller.PwC_R)))))
+    file.write('{:<014.5f}      ! PwC_ConstPwr         - Constant power rating [used if PwC_Mode = 1]\n'.format(controller.PwC_ConstPwr))
+    file.write(      '"{}"      ! PwC_OpenLoop_Inp  - Filename of open-loop power input\n'.format(controller.PwC_OpenLoop_Inp))
     file.write('\n')
     file.write('!------- SHUTDOWN -----------------------------------------------------------\n')
     file.write('{:<014.5f}      ! SD_MaxPit         - Maximum blade pitch angle to initiate shutdown, [rad]\n'.format(controller.sd_maxpit))
@@ -185,7 +185,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<014.5f}      ! Flp_Angle         - Initial or steady state flap angle [rad]\n'.format(controller.flp_angle))
     file.write('{:<014.8e}      ! Flp_Kp            - Blade root bending moment proportional gain for flap control [s]\n'.format(controller.Kp_flap[-1]))
     file.write('{:<014.8e}      ! Flp_Ki            - Flap displacement integral gain for flap control [-]\n'.format(controller.Ki_flap[-1]))
-    file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]'.format(controller.flp_maxpit))
+    file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]\n'.format(controller.flp_maxpit))
     file.write('\n')
     file.write('!------- Open Loop Control -----------------------------------------------------\n')
     file.write('"{}"            ! OL_Filename       - Input file with open loop timeseries\n'.format(controller.OL_Filename))
@@ -199,6 +199,9 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
 
     if hasattr(controller,'SoftCutOut'):
         write_soft_cut_out(controller)
+
+    if hasattr(controller,'OpenLoopControl') and controller.OL_Mode:
+        write_ol_control(controller)
 
 def read_DISCON(DISCON_filename):
     '''
@@ -384,6 +387,8 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['SD_Mode']          = controller.SD_Mode
     DISCON_dict['Fl_Mode']          = controller.Fl_Mode
     DISCON_dict['Flp_Mode']         = controller.Flp_Mode
+    DISCON_dict['PwC_Mode']         = controller.PwC_Mode
+    DISCON_dict['OL_Mode']          = controller.OL_Mode
     # ------- FILTERS -------
     DISCON_dict['F_LPFCornerFreq']	    = turbine.bld_edgewise_freq * 1/4
     DISCON_dict['F_LPFDamping']		    = controller.F_LPFDamping
@@ -472,6 +477,8 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['Flp_Kp']           = [controller.Kp_flap[-1]]
     DISCON_dict['Flp_Ki']           = [controller.Ki_flap[-1]]
     DISCON_dict['Flp_MaxPit']       = controller.flp_maxpit
+    # ------- POWER CONTROL -------
+    DISCON_dict['PwC_LUT_N']        = controller
 
     return DISCON_dict
 
@@ -552,12 +559,12 @@ def write_soft_cut_out(controller,*args):
             file.write('\t{:<08.5f}\t\t{:<08.5f}\n'.format(ws,rating))
 
 
-def write_ol_control(self):
+def write_ol_control(controller):
     ''' 
     Write open loop control input
     '''
 
-    ol_timeseries = self.OpenLoopControl.ol_timeseries
+    ol_timeseries = controller.OpenLoopControl.ol_timeseries
     
     if 'time' in ol_timeseries:
         ol_control_array = np.empty([len(ol_timeseries['time']),len(ol_timeseries)])
@@ -567,24 +574,24 @@ def write_ol_control(self):
         print('WARNING: no time index for open loop control.  This is only index currently supported')
 
     if 'blade_pitch' in ol_timeseries:
-        ol_control_array[:,self.OL_Ind_BldPitch-1] = ol_timeseries['blade_pitch']
+        ol_control_array[:,controller.OL_Ind_BldPitch-1] = ol_timeseries['blade_pitch']
 
     if 'generator_torque' in ol_timeseries:
-        ol_control_array[:,self.OL_Ind_GenTq-1] = ol_timeseries['generator_torque']
+        ol_control_array[:,controller.OL_Ind_GenTq-1] = ol_timeseries['generator_torque']
 
     # Open file
-    if not os.path.exists(os.path.dirname(os.path.abspath(self.OL_Filename))):
-        os.makedirs(os.path.dirname(os.path.abspath(self.OL_Filename)))
+    if not os.path.exists(os.path.dirname(os.path.abspath(controller.OL_Filename))):
+        os.makedirs(os.path.dirname(os.path.abspath(controller.OL_Filename)))
     
-    with open(self.OL_Filename,'w') as f:
+    with open(controller.OL_Filename,'w') as f:
         # Write header
         header_line = '!\tTime'
         unit_line   = '!\t(sec.)'
-        if self.OL_Ind_BldPitch:
+        if controller.OL_Ind_BldPitch:
             header_line += '\t\tBldPitch'
             unit_line   += '\t\t(rad.)'
 
-        if self.OL_Ind_GenTq:
+        if controller.OL_Ind_GenTq:
             header_line += '\t\tGenTq'
             unit_line   += '\t\t(Nm)'
 

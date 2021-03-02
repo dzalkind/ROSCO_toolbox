@@ -138,30 +138,30 @@ class Controller():
         # power controller params
         if 'PwC_Mode' in controller_params:
             self.PwC_Mode = controller_params['PwC_Mode']
-            if 'PwC_const_R' in controller_params:
-                self.PwC_const_R    = controller_params['PwC_const_R']
+            if 'PwC_ConstPwr' in controller_params:
+                self.PwC_ConstPwr    = controller_params['PwC_ConstPwr']
             else:
-                self.PwC_const_R    = 1.0
+                self.PwC_ConstPwr    = 1.0
 
-            if 'PwC_ol_R_filename' in controller_params:
-                self.PwC_ol_R_filename = controller_params['PwC_ol_R_filename']
+            if 'PwC_OpenLoop_Inp' in controller_params:
+                self.PwC_OpenLoop_Inp = controller_params['PwC_OpenLoop_Inp']
             else:
-                self.PwC_ol_R_filename = ""
+                self.PwC_OpenLoop_Inp = ""
                 
         else:
             self.PwC_Mode       = 0
-            self.PwC_const_R        = 1.0
-            self.PwC_ol_R_filename  = ""
+            self.PwC_ConstPwr        = 1.0
+            self.PwC_OpenLoop_Inp  = ""
 
         # soft start (open loop power control)
         if 'soft_start' in controller_params:
             self.SoftStart = SoftStart(self,controller_params['soft_start'])
-            self.PwC_ol_R_filename  = self.SoftStart.filename
+            self.PwC_OpenLoop_Inp  = self.SoftStart.filename
 
         # soft cut-out (open loop power vs. wind speed)
         if 'soft_cut_out' in controller_params:
             self.SoftCutOut = SoftCutOut(self,controller_params['soft_cut_out'])
-            self.PwC_ol_R_filename  = self.SoftCutOut.filename
+            self.PwC_OpenLoop_Inp  = self.SoftCutOut.filename
             
         if 'open_loop' in controller_params:
             # Set open loop control mode
@@ -408,7 +408,7 @@ class Controller():
             self.Kp_flap = np.array([0.0])
 
         # Active power control
-        self.PwC_R, self.PwC_B = self.power_control(turbine.Cp)
+        self.PwC_R, self.PwC_BldPitchMin = self.power_control(turbine.Cp)
 
     def tune_flap_controller(self,turbine):
         '''
@@ -547,8 +547,8 @@ class SoftStart():
         else:
             filename = 'soft_start.dat'  # default
 
-        if hasattr(controller,'PwC_const_R'):
-            full_power = controller.PwC_const_R
+        if hasattr(controller,'PwC_ConstPwr'):
+            full_power = controller.PwC_ConstPwr
         else:
             full_power = 1.0
 

@@ -1369,6 +1369,19 @@ class InputWriter_OpenFAST(InputWriter_Common):
         controller.flp_angle            = self.fst_vt['DISCON_in']['Flp_Angle']
         controller.flp_maxpit           = self.fst_vt['DISCON_in']['Flp_MaxPit']
 
+        controller.PwC_Mode             = self.fst_vt['DISCON_in']['PwC_Mode']
+        controller.OL_Mode              = self.fst_vt['DISCON_in']['OL_Mode']
+
+        controller.PwC_R                = self.fst_vt['DISCON_in']['PwC_PwrRating']
+        controller.PwC_BldPitchMin      = self.fst_vt['DISCON_in']['PwC_BldPitchMin']
+        controller.PwC_ConstPwr         = self.fst_vt['DISCON_in']['PwC_ConstPwr']
+        controller.PwC_OpenLoop_Inp     = self.fst_vt['DISCON_in']['PwC_OpenLoop_Inp']
+
+        controller.OL_Filename             = self.fst_vt['DISCON_in']['OL_Filename']
+        controller.OL_Ind_Breakpoint       = self.fst_vt['DISCON_in']['Ind_Breakpoint']
+        controller.OL_Ind_BldPitch         = self.fst_vt['DISCON_in']['Ind_BldPitch']
+        controller.OL_Ind_GenTq            = self.fst_vt['DISCON_in']['Ind_GenTq']
+
         turbine = type('', (), {})()
         turbine.Cp = type('', (), {})()
         turbine.Ct = type('', (), {})()
