@@ -165,31 +165,39 @@ class Controller():
             
         if 'open_loop' in controller_params:
             # Set open loop control mode
-            if 'time' in controller_params['open_loop']:
-                self.OL_Mode = 1
-                self.OL_Ind_Breakpoint = 1
-            elif 'wind_speed' in controller_params['open_loop']:
-                self.OL_Mode = 2
-                self.OL_Ind_Breakpoint = 1
+            ol_params = controller_params['open_loop']
+            ol_index_counter = 2
+
+            self.OL_Mode = 1
+            self.OL_Ind_Breakpoint = 1
+
+            if 'blade_pitch' in ol_params:
+                self.OL_Ind_BldPitch = ol_index_counter
+                ol_index_counter += 1
             else:
-                self.OL_Mode = 0
-                print('WARNING: open loop breakpoint not specified in control dict, setting OL_Mode=0')
+                self.OL_Ind_BldPitch = 0
 
-            # Set open loop input indices (columns with input)  TODO: there's probably a cleaner way to do this when there are more inputs
-            if 'blade_pitch' in controller_params['open_loop']:
-                self.OL_Ind_BldPitch = 2
+            if 'generator_torque' in ol_params:
+                self.OL_Ind_GenTq = ol_index_counter
+                ol_index_counter += 1
+            else:
+                self.OL_Ind_GenTq = 0
 
-                if 'generator_torque' in controller_params['open_loop']:
-                    self.OL_Ind_GenTq = 3
+            if 'yaw_rate' in ol_params:
+                self.OL_Ind_YawRate = ol_index_counter
+                ol_index_counter += 1
+            else:
+                self.OL_Ind_YawRate = 0
+
+            if 'yaw_angle' in ol_params:
+                if 'yaw_rate' in ol_params:
+                    print('ROSCO Toolbox Warning: both yaw_rate and yaw_angle set as open loop input, using yaw_rate only')
                 else:
-                    self.OL_Ind_GenTq = 0
-
-            elif 'generator_torque' in controller_params['open_loop']:
-                self.OL_Ind_GenTq       = 2
-                self.OL_Ind_BldPitch    = 0
+                    self.OL_Ind_YawRate = ol_index_counter
+                    ol_index_counter += 1
 
             else:
-                raise Exception('No open loop values specified in control dict')
+                self.OL_Ind_YawRate = 0
 
             # Input file
             if 'filename' in controller_params['open_loop']:
@@ -197,12 +205,10 @@ class Controller():
             else:
                 self.OL_Filename = 'open_loop_input.dat'
 
+            # Set up open loop control inputs here
+            self.OpenLoopControl    = OpenLoopControl(self,ol_params)
         else:
             self.OL_Mode = 0
-
-        if self.OL_Mode:
-            self.OpenLoopControl    = OpenLoopControl(self,controller_params['open_loop'])
-        else:
             self.OL_Filename        = "unused"
             self.OL_Ind_Breakpoint  = 0
             self.OL_Ind_BldPitch    = 0
@@ -746,20 +752,63 @@ class OpenLoopControl(object):
         self.dt = 1/20
 
         ol_timeseries = {}
-        if 'time' in ol_control_params:
-            ol_timeseries['time'] = np.arange(ol_control_params['time'][0],ol_control_params['time'][-1],self.dt)
-        else:    
-            raise Exception('WARNING: no time index for open loop control.  This is only index currently supported')
+        # common time input
+        start_times = [ol_control_params[ol_input]['time'][0] for ol_input in ol_control_params if ol_input != 'filename']
+        end_times   = [ol_control_params[ol_input]['time'][-1] for ol_input in ol_control_params if ol_input != 'filename']
 
+        # are all the start/end times the same?
+        all_same = lambda items : all(x == items[0] for x in items)
+        if not all_same(start_times):
+            print('WARNING: all start times are not the same, unexpected behavior may occur')
 
-        if 'blade_pitch' in ol_control_params:
-            ol_timeseries['blade_pitch'] = multi_sigma(ol_timeseries['time'],ol_control_params['time'],ol_control_params['blade_pitch'])
+        if not all_same(end_times):
+            print('WARNING: all end times are not the same, unexpected behavior may occur')        
 
-        if 'generator_torque' in ol_control_params:
-            ol_timeseries['generator_torque'] = multi_sigma(ol_timeseries['time'],ol_control_params['time'],ol_control_params['generator_torque'])
+        # Go from lowest start time to greatest end time
+        ol_timeseries['time'] = np.arange(np.array(start_times).min(),np.array(end_times).max(),self.dt)
+        
+        for ol_key in ol_control_params:
+            if ol_key != 'filename':
+                ol_input = ol_control_params[ol_key]
+                if 'time' in ol_input:
+                    # set up interpolated timeseries
+                    ol_timeseries[ol_key] = multi_sigma(ol_timeseries['time'],ol_input['time'],ol_input['value'])
 
+                elif 'sine' in ol_input:
+                    # set up sinusoidal timeseries
+                    pass
+
+                else:
+                    raise Exception(
+                        'WARNING: no timeseries or sine input specified for for open loop control of {}. \
+                        This is only index currently supported'.ol_input)
+
+        # convert yaw angle to yaw rate
+        if 'yaw_angle' in ol_timeseries:
+            print('ROSCO Toolbox: converting yaw angle to yaw rate for DISCON.IN')
+            ol_timeseries['yaw_rate'] = np.concatenate(([0],np.diff(ol_timeseries['yaw_angle'])))/self.dt
+
+        # Save timeseries to OpenLoopControl object
         self.ol_timeseries  = ol_timeseries
-        self.controller     = controller
+
+    def plot_timeseries(self):
+        '''
+        Debugging script for showing open loop timeseries
+        '''
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(len(self.ol_timeseries)-1,1)
+        i_ax = -1
+        for ol_input in self.ol_timeseries:
+            if ol_input != 'time':
+                i_ax += 1
+                if len(ax) == 1:
+                    ax.plot(self.ol_timeseries['time'],self.ol_timeseries[ol_input])
+                    ax.set_ylabel(ol_input)
+                else:
+                    ax[i_ax].plot(self.ol_timeseries['time'],self.ol_timeseries[ol_input])
+                    ax[i_ax].set_ylabel(ol_input)
+        return fig, ax
+
 
 
 

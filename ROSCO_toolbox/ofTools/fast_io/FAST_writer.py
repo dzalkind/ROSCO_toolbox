@@ -1381,6 +1381,7 @@ class InputWriter_OpenFAST(InputWriter_Common):
         controller.OL_Ind_Breakpoint       = self.fst_vt['DISCON_in']['Ind_Breakpoint']
         controller.OL_Ind_BldPitch         = self.fst_vt['DISCON_in']['Ind_BldPitch']
         controller.OL_Ind_GenTq            = self.fst_vt['DISCON_in']['Ind_GenTq']
+        controller.OL_Ind_YawRate          = self.fst_vt['DISCON_in']['Ind_YawRate']
 
         turbine = type('', (), {})()
         turbine.Cp = type('', (), {})()

@@ -192,6 +192,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{0:<12d}        ! Ind_Breakpoint    - The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)\n'.format(controller.OL_Ind_Breakpoint))
     file.write('{0:<12d}        ! Ind_BldPitch      - The column in OL_Filename that contains the blade pitch input in rad\n'.format(controller.OL_Ind_BldPitch))
     file.write('{0:<12d}        ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm\n'.format(controller.OL_Ind_GenTq))
+    file.write('{0:<12d}        ! Ind_YawRate       - The column in OL_Filename that contains the generator torque in Nm\n'.format(controller.OL_Ind_YawRate))
     file.close()
 
     if hasattr(controller,'SoftStart'):
@@ -567,7 +568,7 @@ def write_ol_control(controller):
     ol_timeseries = controller.OpenLoopControl.ol_timeseries
     
     if 'time' in ol_timeseries:
-        ol_control_array = np.empty([len(ol_timeseries['time']),len(ol_timeseries)])
+        ol_control_array = np.zeros([len(ol_timeseries['time']),len(ol_timeseries)])
         ol_control_array[:,0] = ol_timeseries['time']
 
     else:
@@ -578,6 +579,9 @@ def write_ol_control(controller):
 
     if 'generator_torque' in ol_timeseries:
         ol_control_array[:,controller.OL_Ind_GenTq-1] = ol_timeseries['generator_torque']
+
+    if 'yaw_rate' in ol_timeseries:
+        ol_control_array[:,controller.OL_Ind_YawRate-1] = ol_timeseries['yaw_rate']
 
     # Open file
     if not os.path.exists(os.path.dirname(os.path.abspath(controller.OL_Filename))):
@@ -593,6 +597,10 @@ def write_ol_control(controller):
 
         if controller.OL_Ind_GenTq:
             header_line += '\t\tGenTq'
+            unit_line   += '\t\t(Nm)'
+
+        if controller.OL_Ind_YawRate:
+            header_line += '\t\tYawRate'
             unit_line   += '\t\t(Nm)'
 
         header_line += '\n'

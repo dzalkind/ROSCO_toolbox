@@ -49,32 +49,14 @@ turbine.load_from_fast(path_params['FAST_InputFile'], \
 # Tune controller 
 controller.tune_controller(turbine)
 
-# # Plot minimum pitch schedule
-# fig = [None] * 3
-# ax  = [None] * 3
+# Plot open loop timeseries
+fig,ax = controller.OpenLoopControl.plot_timeseries()
 
-# fig[0], ax[0] = plt.subplots(1,1)
-# ax[0].plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
-# ax[0].legend()
-# ax[0].set_xlabel('Power Rating (-)')
-# ax[0].set_ylabel('Blade pitch (rad)')
-# ax[0].set_xlim((0,1.25))
 
-# fig[1], ax[1] = plt.subplots(1,1)
-# ax[1].plot(controller.SoftStart.tt,controller.SoftStart.R_ss)
-# ax[1].set_xlabel('Time (sec.)')
-# ax[1].set_ylabel('Power Rating (-)')
-
-# fig[2], ax[2] = plt.subplots(1,1)
-# ax[2].plot(controller.SoftCutOut.uu,controller.SoftCutOut.R_scu)
-# ax[2].set_xlabel('Wind Speed (m/s)')
-# ax[2].set_ylabel('Power Rating (-)')
-
-# if False:
-#   plt.show()
-# else:
-#   for i,f in enumerate(fig):
-#     f.savefig(os.path.join(example_out_dir,'12_PowerControl_' + str(i) + '.png'))
+if False:
+  plt.show()
+else:
+  fig.savefig(os.path.join(example_out_dir,'14_OL_Inputs.png'))
 
 
 # Write parameter input file
@@ -116,7 +98,29 @@ cases['Baseline'] = ['Wind1VelX', 'BldPitch1', 'GenTq', 'RotSpeed','NacYaw']
 
 op = output_processing.output_processing()
 fastout = op.load_fast_out(out_file, tmin=0)
-op.plot_fast_out(cases=cases,showplot=True)
+op.plot_fast_out(cases=cases,showplot=False)
+
+if False: # Check yaw rate
+  yaw_rate = controller.OpenLoopControl.ol_timeseries['yaw_rate']
+
+  import scipy as sp
+  f_yr    = sp.interpolate.interp1d(controller.OpenLoopControl.ol_timeseries['time'], \
+                    controller.OpenLoopControl.ol_timeseries['yaw_rate'], \
+                    fill_value = "extrapolate")
+
+  yaw_rate = f_yr(fastout[0]['Time'])
+  yaw = 0
+  dt  = 0.025
+  yaw = np.zeros(len(yaw_rate)+1)
+  for i,yr in enumerate(yaw_rate):
+    yaw[i+1] = yaw[i]+yr*dt 
+
+  # fig, ax = plt.subplots(2,1)
+  # ax[0].plot(fastout[0]['Time'],yaw_rate)
+  plt.plot(fastout[0]['Time'],yaw[:-1]*57.2958)
+  plt.show()
+
+  print('here')
 
 
 

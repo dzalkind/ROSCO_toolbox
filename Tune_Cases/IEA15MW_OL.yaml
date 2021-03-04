@@ -27,7 +27,7 @@ turbine_params:
 #------------------------------- CONTROLLER PARAMETERS ----------------------------------
 controller_params:
   # Controller flags 
-  LoggingLevel:       1                     # {0: write no debug files, 1: write standard output .dbg-file, 2: write standard output .dbg-file and complete avrSWAP-array .dbg2-file
+  LoggingLevel:       2                     # {0: write no debug files, 1: write standard output .dbg-file, 2: write standard output .dbg-file and complete avrSWAP-array .dbg2-file
   F_LPFType:          2                     # {1: first-order low-pass filter, 2: second-order low-pass filter}, [rad/s] (currently filters generator speed and pitch control signals)
   F_NotchType:        0                     # Notch on the measured generator speed {0: disable, 1: enable} 
   IPC_ControlMode:    0                     # Turn Individual Pitch Control (IPC) for fatigue load reductions (pitch contribution) {0: off, 1: 1P reductions, 2: 1P+2P reductions}
@@ -67,7 +67,13 @@ controller_params:
   #   wind_speeds: [0,10,20,25,40]
   #   power_reference: [1,1,1,.7,0]
   open_loop:
-    time: [0,40,80,120]           # breakpoint
-    blade_pitch: [0.1745,0.2618,0.0873,0.1396]      # radians
-    generator_torque: [19624046,19624046,19624046,19624046]  #Nm
+    blade_pitch:
+      time: [0,40,80,120]           # breakpoint
+      value: [0.1745,0.2618,0.0873,0.1396]      # radians
+    generator_torque: 
+      time: [0,40,80,120] 
+      value: [19624046,19624046,19624046,19624046]  #Nm
+    yaw_angle: 
+      time: [0,40,80,120] 
+      value: [0,    0.175,   -0.0873,    0]
     filename: '/Users/dzalkind/Tools/ROSCO_toolbox/Examples/ol_test.dat'
