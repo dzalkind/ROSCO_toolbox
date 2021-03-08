@@ -750,11 +750,12 @@ class OpenLoopControl(object):
 
     def __init__(self,controller,ol_control_params):
         self.dt = 1/20
+        self.max_time  = 200
 
         ol_timeseries = {}
         # common time input
-        start_times = [ol_control_params[ol_input]['time'][0] for ol_input in ol_control_params if ol_input != 'filename']
-        end_times   = [ol_control_params[ol_input]['time'][-1] for ol_input in ol_control_params if ol_input != 'filename']
+        start_times = [ol_control_params[ol_input]['time'][0] for ol_input in ol_control_params if 'time' in ol_control_params[ol_input]]
+        end_times   = [ol_control_params[ol_input]['time'][-1] for ol_input in ol_control_params if 'time' in ol_control_params[ol_input]]
 
         # are all the start/end times the same?
         all_same = lambda items : all(x == items[0] for x in items)
@@ -765,18 +766,32 @@ class OpenLoopControl(object):
             print('WARNING: all end times are not the same, unexpected behavior may occur')        
 
         # Go from lowest start time to greatest end time
-        ol_timeseries['time'] = np.arange(np.array(start_times).min(),np.array(end_times).max(),self.dt)
+        ol_timeseries['time'] = np.arange(0,self.max_time,self.dt)
         
         for ol_key in ol_control_params:
             if ol_key != 'filename':
                 ol_input = ol_control_params[ol_key]
                 if 'time' in ol_input:
+                    # append first value to 0s breakpoint
+                    if ol_timeseries['time'][0] > 0:
+                        ol_input['time'] = np.append(ol_input['time'],0)
+                        ol_input['value'] = np.append(ol_input['value'],ol_input['value'][0])
+
+                    # append last value to max_time breakpoint
+                    if self.max_time > ol_timeseries['time'][-1]:
+                        ol_input['time'] = np.append(ol_input['time'],self.max_time)
+                        ol_input['value'] = np.append(ol_input['value'],ol_input['value'][-1])
+                    
                     # set up interpolated timeseries
                     ol_timeseries[ol_key] = multi_sigma(ol_timeseries['time'],ol_input['time'],ol_input['value'])
 
                 elif 'sine' in ol_input:
                     # set up sinusoidal timeseries
-                    pass
+                    ol_timeseries[ol_key] = ol_input['sine']['amplitude'] * \
+                                            np.sin( \
+                                                2 * np.pi *  ol_timeseries['time'] / \
+                                                ol_input['sine']['period'] \
+                                                )
 
                 else:
                     raise Exception(

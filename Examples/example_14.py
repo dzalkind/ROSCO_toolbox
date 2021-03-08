@@ -75,7 +75,7 @@ if not os.path.exists(run_dir):
   os.makedirs(run_dir)
 basename = 'OL_Test'
 
-case_list, case_name_list, channels =  power_curve_control(param_file,run_dir, basename,rosco_dll=rosco_dll,U = [20])
+case_list, case_name_list, channels =  power_curve_control(param_file,run_dir, basename,rosco_dll=rosco_dll,U = [9])
 
 fastBatch                   = runFAST_pywrapper_batch(FAST_ver='OpenFAST',dev_branch = True)
 fastBatch.FAST_directory    = os.path.join(rt_dir,'Test_Cases/IEA-15-240-RWT-UMaineSemi')   # Path to fst directory files
@@ -98,7 +98,12 @@ cases['Baseline'] = ['Wind1VelX', 'BldPitch1', 'GenTq', 'RotSpeed','NacYaw']
 
 op = output_processing.output_processing()
 fastout = op.load_fast_out(out_file, tmin=0)
-op.plot_fast_out(cases=cases,showplot=False)
+fix, ax = op.plot_fast_out(cases=cases,showplot=True)
+
+if False:
+  plt.show()
+else:
+  fig.savefig(os.path.join(example_out_dir,'14_OL_FAST_Out.png'))
 
 if False: # Check yaw rate
   yaw_rate = controller.OpenLoopControl.ol_timeseries['yaw_rate']
