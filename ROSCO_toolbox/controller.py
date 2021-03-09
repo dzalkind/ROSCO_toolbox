@@ -97,11 +97,6 @@ class Controller():
         else:
             self.ss_pcgain = 0.001      # Default to 0.1% setpoint shift
         
-        if controller_params['ss_cornerfreq']:
-            self.ss_cornerfreq = controller_params['ss_cornerfreq']
-        else:
-            self.ss_cornerfreq = .62831850001     # Default to 10 second time constant 
-        
         if controller_params['ps_percent']:
             self.ps_percent = controller_params['ps_percent']
         else:
@@ -135,6 +130,20 @@ class Controller():
             else:
                 self.flp_maxpit = 0.0
 
+        # Filters
+        if controller_params['filter_params']['f_we_cornerfreq']:
+            self.f_we_cornerfreq    = controller_params['filter_params']['f_we_cornerfreq']
+        else:
+            self.f_we_cornerfreq    = 0.20944
+        if controller_params['filter_params']['f_fl_highpassfreq']:
+            self.f_fl_highpassfreq    = controller_params['filter_params']['f_fl_highpassfreq']
+        else:
+            self.f_fl_highpassfreq    = 0.01042
+        if controller_params['filter_params']['f_ss_cornerfreq']:
+            self.f_ss_cornerfreq = controller_params['f_ss_cornerfreq']
+        else:
+            self.f_ss_cornerfreq = .62831850001     # Default to 10 second time constant 
+        
         # power controller params
         if 'PwC_Mode' in controller_params:
             self.PwC_Mode = controller_params['PwC_Mode']
