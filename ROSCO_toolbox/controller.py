@@ -131,18 +131,23 @@ class Controller():
                 self.flp_maxpit = 0.0
 
         # Filters
-        if controller_params['filter_params']['f_we_cornerfreq']:
-            self.f_we_cornerfreq    = controller_params['filter_params']['f_we_cornerfreq']
+        if 'filter_params' in controller_params:
+            if controller_params['filter_params']['f_we_cornerfreq']:
+                self.f_we_cornerfreq    = controller_params['filter_params']['f_we_cornerfreq']
+            else:
+                self.f_we_cornerfreq    = 0.20944
+            if controller_params['filter_params']['f_fl_highpassfreq']:
+                self.f_fl_highpassfreq    = controller_params['filter_params']['f_fl_highpassfreq']
+            else:
+                self.f_fl_highpassfreq    = 0.01042
+            if controller_params['filter_params']['f_ss_cornerfreq']:
+                self.f_ss_cornerfreq = controller_params['f_ss_cornerfreq']
+            else:
+                self.f_ss_cornerfreq = .62831850001     # Default to 10 second time constant 
         else:
             self.f_we_cornerfreq    = 0.20944
-        if controller_params['filter_params']['f_fl_highpassfreq']:
-            self.f_fl_highpassfreq    = controller_params['filter_params']['f_fl_highpassfreq']
-        else:
             self.f_fl_highpassfreq    = 0.01042
-        if controller_params['filter_params']['f_ss_cornerfreq']:
-            self.f_ss_cornerfreq = controller_params['f_ss_cornerfreq']
-        else:
-            self.f_ss_cornerfreq = .62831850001     # Default to 10 second time constant 
+            self.f_ss_cornerfreq = .62831850001
         
         # power controller params
         if 'PwC_Mode' in controller_params:
@@ -513,8 +518,8 @@ class Controller():
 
         self.Kp_flap = (2*self.zeta_flp*self.omega_flp - 2*zetaf*omegaf)/(self.kappa*omegaf**2)
         self.Ki_flap = (self.omega_flp**2 - omegaf**2)/(self.kappa*omegaf**2)
-        self.Kp_flap = (2*self.zeta_flp*self.omega_flp - 2*zetaf*omegaf)/(kappa*omegaf**2)
-        self.Ki_flap = (self.omega_flp**2 - omegaf**2)/(kappa*omegaf**2)
+        self.Kp_flap = (2*self.zeta_flp*self.omega_flp - 2*zetaf*omegaf)/(self.kappa*omegaf**2)
+        self.Ki_flap = (self.omega_flp**2 - omegaf**2)/(self.kappa*omegaf**2)
 
     def power_control(self, Cp, nR = 12):
 
