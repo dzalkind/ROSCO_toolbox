@@ -222,6 +222,7 @@ class Controller():
             self.OL_Ind_Breakpoint  = 0
             self.OL_Ind_BldPitch    = 0
             self.OL_Ind_GenTq       = 0
+            self.OL_Ind_YawRate     = 0
 
 
     def tune_controller(self, turbine):
