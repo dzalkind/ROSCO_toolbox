@@ -69,7 +69,7 @@ ROSCO_utilities.write_DISCON(turbine,controller,param_file=param_file, txt_filen
 
 # Run OpenFAST Case:
 # Constant wind speed (9 m/s)
-rosco_dll = os.path.join(rt_dir,'ROSCO/install/lib/libdiscon.dylib')
+rosco_dll = os.path.join(rt_dir,'ROSCO/build/libdiscon.dylib')
 run_dir   = os.path.join(example_out_dir,'14_OL_Test')
 if not os.path.exists(run_dir):
   os.makedirs(run_dir)

@@ -50,7 +50,7 @@ fig = [None] * 3
 ax  = [None] * 3
 
 fig[0], ax[0] = plt.subplots(1,1)
-ax[0].plot(controller.PwC_R, controller.PwC_B,label='Active Power Control LUT')
+ax[0].plot(controller.PwC_R, controller.PwC_BldPitchMin,label='Active Power Control LUT')
 ax[0].legend()
 ax[0].set_xlabel('Power Rating (-)')
 ax[0].set_ylabel('Blade pitch (rad)')
